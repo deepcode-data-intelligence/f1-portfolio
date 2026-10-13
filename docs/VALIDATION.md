@@ -31,7 +31,7 @@ No benchmark values are claimed here. Fill results from reproducible runs and re
 3. Driver lateral-offset edits currently do not affect executor behavior.
 4. Segment-shift semantics and continuity need validation; distance replay alone does not establish stable control.
 5. Connector/driver CLI containers are not live listeners/controllers. UDP fan-out and adapters remain pending.
-6. Historian and agent health checks are scaffolds, not functioning ingestion or AI.
+6. The history agent health check is a scaffold, not functioning AI. The historian (box-box v1) ingests, persists and queries; its evidence so far is synthetic and single-client (see `evidence/2026-10-13-box-box-v1.md`).
 
 ## Evidence record template
 

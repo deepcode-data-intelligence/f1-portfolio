@@ -1,0 +1,9 @@
+{"tags": [
+  {"pattern": "SIM.CAR*.SPEED", "deviation": 0.5},
+  {"pattern": "SIM.CAR*.THROTTLE", "deviation": 0.01},
+  {"pattern": "SIM.CAR*.BRAKE", "deviation": 0.01},
+  {"pattern": "SIM.CAR*.STEER", "deviation": 0.005},
+  {"pattern": "SIM.CAR*.RPM", "deviation": 25},
+  {"pattern": "SIM.CAR*.LAP_DISTANCE", "deviation": 0.25},
+  {"pattern": "SIM.CAR*.TYRE.*", "deviation": 0.5}
+]}

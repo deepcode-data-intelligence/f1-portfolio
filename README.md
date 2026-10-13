@@ -16,7 +16,7 @@ A personal engineering lab by **Rodrigo Manso**, supported by [DeepCode](https:/
 flowchart LR
  J[Jolpica historical data] --> E[Python ETL / DuckDB / Parquet]
  E --> A[History agent: read-only SQL + RAG]
- F[FastF1 post-session data] --> H[box-box: planned Rust historian]
+ F[FastF1 post-session data] --> H[box-box: Rust historian]
  G[Game UDP / recorded packets] --> C[Capture and fan-out]
  C --> S[Edge connector]
  S --> H
@@ -37,7 +37,7 @@ This diagram is a target design, not a depiction of a working integrated deploym
 | Component | Present code / scope | Still to demonstrate |
 |---|---|---|
 | [f1-data-platform](f1-data-platform/) | Historical ETL implementation; raw/staging/marts and quality modules | See the actively maintained component README for run evidence and remaining backfill |
-| [box-box](box-box/) | Rust service scaffold with health endpoint | Ingestion, storage, compression and query pipeline |
+| [box-box](box-box/) | Rust historian v1: HTTP ingest, swinging-door compression, WAL + Parquet, restart recovery, query/downsampling/interpolation, metrics; [evidence](docs/evidence/2026-10-13-box-box-v1.md) from a synthetic local run | Real packets through the connector, FastF1 batch import, retention, multi-client load |
 | [f1-sim-connector](f1-sim-connector/) | Header parser, tags, exception filter, in-memory buffer | Packet bodies, live listener, durable delivery and historian client |
 | [f1-telemetry-lab](f1-telemetry-lab/) | Streamlit scaffold | Dashboard consuming the historian API |
 | [f1-history-agent](f1-history-agent/) | FastAPI health scaffold | SQL tools, RAG, API contracts and evaluations |
@@ -53,7 +53,7 @@ From the repository root, Docker and Compose are required for container commands
 docker compose up box-box history-agent telemetry-lab
 ```
 
-This starts the service scaffolds (health endpoints and dashboard shell), not a complete telemetry platform. Connector and driver container defaults currently display CLI help; they do not capture UDP or drive the game. Follow each component README for local commands and the ETL README for current pipeline execution. Compose port declarations alone do not implement packet fan-out.
+This starts the historian (functional v1), the history-agent health scaffold and the dashboard shell, not a complete telemetry platform. Connector and driver container defaults currently display CLI help; they do not capture UDP or drive the game. Follow each component README for local commands and the ETL README for current pipeline execution. Compose port declarations alone do not implement packet fan-out.
 
 ## First deliverable
 

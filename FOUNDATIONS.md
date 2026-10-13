@@ -9,7 +9,7 @@ Demonstrate industrial data engineering, applied AI and architecture through a p
 ## Eight cases
 
 1. **f1-data-platform** — Python ETL from Jolpica into raw JSON, typed staging Parquet and DuckDB marts. Resumability, pagination, rate-limit handling and quality checks are core concerns. Full-history runtime must be measured; it depends on entity scope, API limits and network behavior. The component README is actively maintained alongside implementation.
-2. **box-box** — planned Rust historian: streaming ingestion, batch import, Parquet storage, swinging-door compression, range queries and downsampling via HTTP. The current service is a health scaffold. Batch rows into appropriately sized files/row groups; do not assume a file per tag at streaming frequency is efficient.
+2. **box-box** — Rust historian. v1 (13 October 2026) implements HTTP ingestion with per-sample validation, swinging-door compression per tag with a guaranteed reconstruction bound, a per-session write-ahead log folded into Parquet segments, restart recovery, range queries with downsampling, interpolation and loss-accounting metrics; see `docs/evidence/2026-10-13-box-box-v1.md`. Still open: FastF1 batch import, retention, and the first run on real game packets. Rows are batched into segments (default 100k rows) rather than a file per tag.
 3. **f1-telemetry-lab** — Streamlit dashboards over the historian API. Compare speed, throttle and braking by lap distance. Label any direct FastF1 fallback so it cannot be mistaken for successful historian integration. Label source, units, quality and replay mode.
 4. **f1-history-agent** — read-only statistics tools over DuckDB plus retrieval for narrative. Version a golden question set including unanswerable and ambiguous questions. Query limits, allowlisted access, timeouts, provenance and abstention are required. A headless model adapter is an implementation option; provider authentication, usage limits, cost and terms still apply. No model request may write game controls directly.
 5. **f1-strategy-ml** — later degradation/pit-window experiments. Use chronological splits and separate simulator data from real-world sources. Known simulator settings are useful experimental controls, not proof of transfer to real racing.
@@ -68,6 +68,7 @@ The author is Rodrigo Manso, supported by DeepCode. Produce separate English and
 
 2026-10-12: monorepo scaffold, box-box naming and proposed eight-case foundation (initially six cases).
 2026-10-13: connector and driver prototypes extend the scope to eight cases; telemetry reliability and reproducible AI evaluation become the delivery gates. Motion remains optional. The previous unconditional control, lossless buffering, no-cost inference and real-force replay claims are superseded by this baseline.
+2026-10-13: box-box v1 implemented and exercised locally (synthetic load, SIGKILL recovery, fidelity within per-tag deviation). The swinging door uses half the configured deviation internally so that `deviation` is the user-facing reconstruction bound.
 
 ## References
 
