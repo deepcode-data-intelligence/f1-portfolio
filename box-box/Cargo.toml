@@ -5,7 +5,7 @@ edition = "2021"
 description = "A minimal industrial historian (PIMS) for Formula 1 telemetry: tag/time-series model, swinging-door compression, WAL + Parquet storage, HTTP ingest and query API"
 license = "MIT"
 authors = ["Rodrigo Manso <rodrigo@deepcode.com.br>"]
-repository = "https://github.com/rodrigolmanso/f1-portifolio"
+repository = "https://github.com/deepcode-data-intelligence/f1-portfolio"
 
 [lib]
 name = "boxbox"
