@@ -41,7 +41,7 @@ flowchart LR
 
 | # | Case | Focus | Stack | Status |
 |---|------|-------|-------|--------|
-| 1 | [`f1-data-platform`](f1-data-platform/) | Data engineering: layered ETL of full F1 history | Python, DuckDB, Parquet | 🧱 scaffold |
+| 1 | [`f1-data-platform`](f1-data-platform/) | Data engineering: layered ETL of full F1 history | Python, DuckDB, Parquet | 🚧 in progress |
 | 2 | [`box-box`](box-box/) | A minimal industrial historian (PIMS) for telemetry: tag/time-series model, swinging-door compression, query API | Rust, Arrow/Parquet, axum | 🧱 scaffold |
 | 3 | [`f1-telemetry-lab`](f1-telemetry-lab/) | PI-Vision-style comparative telemetry dashboards | Python, Streamlit, FastF1 | 🧱 scaffold |
 | 4 | [`f1-history-agent`](f1-history-agent/) | Headless AI agent: RAG over F1 history + SQL tool-calling for exact stats, with automated evals | Python, FastAPI, local embeddings | 🧱 scaffold |

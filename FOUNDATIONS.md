@@ -3,7 +3,7 @@
 > Public monorepo: https://github.com/rodrigolmanso/f1-portifolio — one directory per case. The README presents the platform; this document is the planning baseline.
 > Solution page: https://deepcode.com.br/f1/
 >
-> Status: scaffold completed on 2026-10-12 (structure, CI, Docker and smoke tests for every case). `f1-sim-connector` and `f1-sim-driver` added on 2026-10-13. Implementation starts with case 1.
+> Status: scaffold completed on 2026-10-12 (structure, CI, Docker and smoke tests for every case). `f1-sim-connector` and `f1-sim-driver` added on 2026-10-13. Case 1 pipeline runs end to end since 2026-10-13 (verified live for one season); full-history backfill pending.
 
 ## Vision
 
