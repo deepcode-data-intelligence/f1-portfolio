@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      data-platform: ${{ steps.filter.outputs.data-platform }}
+      box-box: ${{ steps.filter.outputs.box-box }}
+      telemetry-lab: ${{ steps.filter.outputs.telemetry-lab }}
+      history-agent: ${{ steps.filter.outputs.history-agent }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            data-platform: ['f1-data-platform/**']
+            box-box: ['box-box/**']
+            telemetry-lab: ['f1-telemetry-lab/**']
+            history-agent: ['f1-history-agent/**']
+
+  python:
+    needs: changes
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.data-platform == 'true' || needs.changes.outputs.telemetry-lab == 'true' || needs.changes.outputs.history-agent == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [f1-data-platform, f1-telemetry-lab, f1-history-agent]
+    defaults:
+      run:
+        working-directory: ${{ matrix.case }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras --dev
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest -q
+
+  rust:
+    needs: changes
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.box-box == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: box-box
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: box-box
+      - run: cargo fmt --all --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test

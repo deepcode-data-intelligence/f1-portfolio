@@ -1,0 +1,40 @@
+[project]
+name = "f1-history-agent"
+version = "0.1.0"
+description = "Headless AI agent: RAG over F1 history + SQL tool-calling, plus the /stats REST API (platform gateway)"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Rodrigo Manso", email = "rodrigo@deepcode.com.br" }]
+requires-python = ">=3.12"
+dependencies = [
+  "duckdb>=1.1",
+  "fastapi>=0.115",
+  "httpx>=0.27",
+  "pydantic>=2",
+  "pydantic-settings>=2.5",
+  "uvicorn[standard]>=0.30",
+]
+
+
+[dependency-groups]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/f1_history_agent"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

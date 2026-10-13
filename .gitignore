@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Rust
+target/
+
+# Data (never commit raw/derived data)
+data/
+*.duckdb
+*.duckdb.wal
+*.parquet
+.fastf1-cache/
+
+# Env & IDE
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
+
+# Flutter
+f1-mobile/build/
+f1-mobile/.dart_tool/

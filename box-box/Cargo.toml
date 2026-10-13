@@ -1,0 +1,27 @@
+[package]
+name = "box-box"
+version = "0.1.0"
+edition = "2021"
+description = "A minimal industrial historian (PIMS) for Formula 1 telemetry: tag/time-series model, swinging-door compression, Parquet storage, HTTP query API"
+license = "MIT"
+authors = ["Rodrigo Manso <rodrigo@deepcode.com.br>"]
+repository = "https://github.com/rodrigolmanso/f1-portfolio"
+
+[lib]
+name = "boxbox"
+path = "src/lib.rs"
+
+[[bin]]
+name = "box-box"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+axum = "0.7"
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }

@@ -4,8 +4,8 @@ An end-to-end data & AI platform built around Formula 1 public data, designed as
 integrated cases that demonstrate applied knowledge across **data engineering, industrial
 time-series systems, applied AI/RAG, dashboards, machine learning and mobile**.
 
-> 🏗️ **Status: design phase.** Architecture and scope are defined (see below); implementation
-> is happening case by case. Each case will graduate into its own repository and be linked here.
+> 🏗️ **Status: scaffolded.** Architecture and scope are defined (see below) and every case has
+> its skeleton, CI and Docker image in this monorepo; implementation is happening case by case.
 >
 > 📄 Full solution overview (architecture, infrastructure, BPM process diagrams, glossary):
 > **https://deepcode.com.br/f1/**
@@ -23,7 +23,7 @@ from scratch in the open.
 ```mermaid
 flowchart LR
     J[Jolpica-F1 API<br/>history 1950–today] --> DP[f1-data-platform<br/>Python ETL · DuckDB/Parquet]
-    FF[FastF1<br/>telemetry] --> PIMS[f1-pims<br/>Rust historian · Parquet<br/>swinging-door compression]
+    FF[FastF1<br/>telemetry] --> PIMS[box-box<br/>Rust historian · Parquet<br/>swinging-door compression]
     DP --> AG[f1-history-agent<br/>FastAPI · RAG + SQL tools<br/>+ /stats REST API]
     PIMS --> TL[f1-telemetry-lab<br/>Streamlit dashboards]
     DP --> ML[f1-strategy-ml<br/>tyre & pit-stop models]
@@ -33,12 +33,21 @@ flowchart LR
 
 | # | Case | Focus | Stack | Status |
 |---|------|-------|-------|--------|
-| 1 | `f1-data-platform` | Data engineering: layered ETL of full F1 history | Python, DuckDB, Parquet | 🎨 design |
-| 2 | `f1-pims` | A minimal industrial historian (PIMS) for telemetry: tag/time-series model, swinging-door compression, query API | Rust, Arrow/Parquet, axum | 🎨 design |
-| 3 | `f1-telemetry-lab` | PI-Vision-style comparative telemetry dashboards | Python, Streamlit, FastF1 | 🎨 design |
-| 4 | `f1-history-agent` | Headless AI agent: RAG over F1 history + SQL tool-calling for exact stats, with automated evals | Python, FastAPI, local embeddings | 🎨 design |
-| 5 | `f1-strategy-ml` | Tyre degradation & pit-window models | Python, scikit-learn | 📋 phase 2 |
-| 6 | `f1-mobile` | Mobile client for the platform APIs: natural-language Q&A, stats explorer, telemetry charts, offline-first | Flutter/Dart | 📋 phase 2 |
+| 1 | [`f1-data-platform`](f1-data-platform/) | Data engineering: layered ETL of full F1 history | Python, DuckDB, Parquet | 🧱 scaffold |
+| 2 | [`box-box`](box-box/) | A minimal industrial historian (PIMS) for telemetry: tag/time-series model, swinging-door compression, query API | Rust, Arrow/Parquet, axum | 🧱 scaffold |
+| 3 | [`f1-telemetry-lab`](f1-telemetry-lab/) | PI-Vision-style comparative telemetry dashboards | Python, Streamlit, FastF1 | 🧱 scaffold |
+| 4 | [`f1-history-agent`](f1-history-agent/) | Headless AI agent: RAG over F1 history + SQL tool-calling for exact stats, with automated evals | Python, FastAPI, local embeddings | 🧱 scaffold |
+| 5 | [`f1-strategy-ml`](f1-strategy-ml/) | Tyre degradation & pit-window models | Python, scikit-learn | 📋 phase 2 |
+| 6 | [`f1-mobile`](f1-mobile/) | Mobile client for the platform APIs: natural-language Q&A, stats explorer, telemetry charts, offline-first | Flutter/Dart | 📋 phase 2 |
+
+## Run the platform
+
+```bash
+docker compose up                      # box-box :8081 · history-agent :8080 · telemetry-lab :8501
+docker compose --profile etl run etl   # one-shot history ETL (writes the shared DuckDB volume)
+```
+
+Each case folder has its own README with local-development instructions (`uv` for Python, `cargo` for Rust).
 
 ## Design principles
 
@@ -46,6 +55,7 @@ flowchart LR
 - **Exact numbers, never hallucinated** — the AI agent answers stats via SQL tool-calling; RAG is reserved for narrative.
 - **Industrial patterns in the open** — the PIMS case implements the historian concepts (tags, compression deviation, downsampling) that usually live behind enterprise licenses.
 - **Evaluation as a feature** — the agent ships with a golden Q&A eval set and automated scoring.
+- **Docker-first** — every runnable case ships a `Dockerfile` and `docker-compose.yml`; `docker compose up` is the only requirement to bring it up. Local toolchains (uv, cargo) are optional, for development only.
 
 ## Author
 

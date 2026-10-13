@@ -1,0 +1,48 @@
+# F1 Data Platform — single entry point for every runnable case.
+#
+#   docker compose up                       # platform services (box-box + history-agent + telemetry-lab)
+#   docker compose --profile etl run etl    # one-shot ETL (f1-data-platform)
+#
+# Shared volumes:
+#   f1-data   -> DuckDB / Parquet produced by f1-data-platform, read by f1-history-agent
+#   f1-ts     -> telemetry Parquet written by box-box
+services:
+  etl:
+    build: ./f1-data-platform
+    profiles: ["etl"]
+    environment:
+      F1_DATA_DIR: /data
+    volumes:
+      - f1-data:/data
+
+  box-box:
+    build: ./box-box
+    environment:
+      BOXBOX_DATA_DIR: /data
+      BOXBOX_BIND: 0.0.0.0:8081
+    ports:
+      - "8081:8081"
+    volumes:
+      - f1-ts:/data
+
+  history-agent:
+    build: ./f1-history-agent
+    environment:
+      F1_DATA_DIR: /data
+    ports:
+      - "8080:8080"
+    volumes:
+      - f1-data:/data:ro
+
+  telemetry-lab:
+    build: ./f1-telemetry-lab
+    environment:
+      BOXBOX_URL: http://box-box:8081
+    ports:
+      - "8501:8501"
+    depends_on:
+      - box-box
+
+volumes:
+  f1-data:
+  f1-ts:
