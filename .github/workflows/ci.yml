@@ -13,6 +13,7 @@ jobs:
       box-box: ${{ steps.filter.outputs.box-box }}
       telemetry-lab: ${{ steps.filter.outputs.telemetry-lab }}
       history-agent: ${{ steps.filter.outputs.history-agent }}
+      sim-connector: ${{ steps.filter.outputs.sim-connector }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -23,15 +24,16 @@ jobs:
             box-box: ['box-box/**']
             telemetry-lab: ['f1-telemetry-lab/**']
             history-agent: ['f1-history-agent/**']
+            sim-connector: ['f1-sim-connector/**']
 
   python:
     needs: changes
-    if: ${{ github.event_name == 'push' || needs.changes.outputs.data-platform == 'true' || needs.changes.outputs.telemetry-lab == 'true' || needs.changes.outputs.history-agent == 'true' }}
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.data-platform == 'true' || needs.changes.outputs.telemetry-lab == 'true' || needs.changes.outputs.history-agent == 'true' || needs.changes.outputs.sim-connector == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        case: [f1-data-platform, f1-telemetry-lab, f1-history-agent]
+        case: [f1-data-platform, f1-telemetry-lab, f1-history-agent, f1-sim-connector]
     defaults:
       run:
         working-directory: ${{ matrix.case }}
