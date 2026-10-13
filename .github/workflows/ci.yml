@@ -14,6 +14,7 @@ jobs:
       telemetry-lab: ${{ steps.filter.outputs.telemetry-lab }}
       history-agent: ${{ steps.filter.outputs.history-agent }}
       sim-connector: ${{ steps.filter.outputs.sim-connector }}
+      sim-driver: ${{ steps.filter.outputs.sim-driver }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -25,15 +26,16 @@ jobs:
             telemetry-lab: ['f1-telemetry-lab/**']
             history-agent: ['f1-history-agent/**']
             sim-connector: ['f1-sim-connector/**']
+            sim-driver: ['f1-sim-driver/**']
 
   python:
     needs: changes
-    if: ${{ github.event_name == 'push' || needs.changes.outputs.data-platform == 'true' || needs.changes.outputs.telemetry-lab == 'true' || needs.changes.outputs.history-agent == 'true' || needs.changes.outputs.sim-connector == 'true' }}
+    if: ${{ github.event_name == 'push' || needs.changes.outputs.data-platform == 'true' || needs.changes.outputs.telemetry-lab == 'true' || needs.changes.outputs.history-agent == 'true' || needs.changes.outputs.sim-connector == 'true' || needs.changes.outputs.sim-driver == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        case: [f1-data-platform, f1-telemetry-lab, f1-history-agent, f1-sim-connector]
+        case: [f1-data-platform, f1-telemetry-lab, f1-history-agent, f1-sim-connector, f1-sim-driver]
     defaults:
       run:
         working-directory: ${{ matrix.case }}

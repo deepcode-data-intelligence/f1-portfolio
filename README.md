@@ -27,6 +27,10 @@ flowchart LR
     PS5[F1 game on PS5<br/>UDP telemetry · 60 Hz] --> SIM[f1-sim-connector<br/>Python edge connector<br/>exception filter · store-and-forward]
     SIM --> PIMS
     PS5 -. real time .-> RIG[motion rig]
+    PS5 --> DRV[f1-sim-driver<br/>scripted lap executor<br/>distance-indexed · position hold]
+    PIMS --> ED[AI lap editor<br/>Claude · ChatGPT]
+    ED -- lap script --> DRV
+    DRV -- game inputs --> PS5
     PIMS -. replay · derived G-forces .-> RIG
     DP --> AG[f1-history-agent<br/>FastAPI · RAG + SQL tools<br/>+ /stats REST API]
     PIMS --> TL[f1-telemetry-lab<br/>Streamlit dashboards]
@@ -44,6 +48,7 @@ flowchart LR
 | 5 | [`f1-strategy-ml`](f1-strategy-ml/) | Tyre degradation & pit-window models | Python, scikit-learn | 📋 phase 2 |
 | 6 | [`f1-mobile`](f1-mobile/) | Mobile client for the platform APIs: natural-language Q&A, stats explorer, telemetry charts, live pit wall, offline-first | Flutter/Dart | 📋 phase 2 |
 | 7 | [`f1-sim-connector`](f1-sim-connector/) | Edge connector (PI Interface pattern) for the F1 game's live UDP telemetry: parser, tag mapping, edge exception compression, store-and-forward, quality flags | Python | 🧱 scaffold |
+| 8 | [`f1-sim-driver`](f1-sim-driver/) | Scripted lap executor: an AI analyses a lap, writes the next one as a distance-indexed script, the executor plays it. Hosts the "AI race engineers" competition (Claude vs ChatGPT, best valid lap wins) | Python | 🧱 scaffold |
 
 ## Run the platform
 
@@ -60,12 +65,14 @@ Public F1 sources are **historical or post-session** (Jolpica, FastF1). The F1 g
 what an industrial historian exists to handle: **live telemetry at 60 Hz with a known car setup**.
 That enables the platform's showcase features — overlaying your own game lap on a real driver's lap
 aligned by distance, training tyre-degradation models in a controlled environment and testing them
-against real data (domain shift), and replaying a real lap on a motion rig using G-forces derived
-from position and speed.
+against real data (domain shift), replaying a real lap on a motion rig using G-forces derived
+from position and speed, and letting AI models compete as race engineers: analyse a lap, script the
+next one, execute it, repeat.
 
 ## Design principles
 
 - **Integration over isolation** — every case consumes or feeds another; the platform tells one architecture story.
+- **The AI engineers, it does not drive** — LLM latency rules out real-time control; the AI writes the next lap as a script and a dumb executor plays it.
 - **Exact numbers, never hallucinated** — the AI agent answers stats via SQL tool-calling; RAG is reserved for narrative.
 - **Industrial patterns in the open** — the PIMS case implements the historian concepts (tags, compression deviation, downsampling) that usually live behind enterprise licenses.
 - **Evaluation as a feature** — the agent ships with a golden Q&A eval set and automated scoring.

@@ -3,7 +3,7 @@
 > Public monorepo: https://github.com/rodrigolmanso/f1-portifolio — one directory per case. The README presents the platform; this document is the planning baseline.
 > Solution page: https://deepcode.com.br/f1/
 >
-> Status: scaffold completed on 2026-10-12 (structure, CI, Docker and smoke tests for every case). `f1-sim-connector` added on 2026-10-13. Implementation starts with case 1.
+> Status: scaffold completed on 2026-10-12 (structure, CI, Docker and smoke tests for every case). `f1-sim-connector` and `f1-sim-driver` added on 2026-10-13. Implementation starts with case 1.
 
 ## Vision
 
@@ -26,7 +26,11 @@ A public GitHub portfolio (`github.com/rodrigolmanso`) that demonstrates, on an 
    PS5 F1 game ───▶ │  f1-sim-connector   │   (live UDP, 60 Hz, known car setup)
    (UDP telemetry)  │  (edge connector)   │
                     └────────┬───────────┘
-                             └──────────────────────▶ motion rig (real time, reads UDP directly)
+                             ├──────────────────────▶ motion rig (real time, reads UDP directly)
+                             └──────────────────────▶ f1-sim-driver (lap distance + position)
+                    ┌────────────────────┐                     │
+   AI lap editor ─▶ │  lap script (JSON)  │ ───────────────────┘──▶ game inputs (virtual gamepad / adapter)
+   (Claude, GPT)    └────────────────────┘
 ```
 
 Data sources fall into two classes, and the platform deliberately covers both:
@@ -82,6 +86,20 @@ The equivalent of a *PI Interface / PI Connector*. Receives the F1 game's UDP te
 - **Data quality marking**: every sample carries a quality (good / bad / stale / substituted), the industrial pattern for trusting a value downstream.
 - Why it matters: this is the piece that tells the story of a *real-time system*, not just batch ETL, and it is the pattern the author knows from AVEVA PI.
 
+### 8. `f1-sim-driver` — Scripted lap executor (Python)
+The AI does **not** drive in real time (LLM latency is hundreds of milliseconds; the car needs a decision every 16 ms). Instead the lap becomes a script:
+
+1. A reference lap (human or baseline) is recorded through `f1-sim-connector` into `box-box`.
+2. The AI *lap editor* analyses it with telemetry tools, compares it with a reference (e.g. a real driver's lap from FastF1 aligned by distance) and writes the next lap as a **lap script**: steering, throttle, brake and gear **indexed by lap distance in metres**, never by time. Edits are local and incremental ("brake 8 m later into T1", "5% more throttle on exit of T12", "3 m wider entry at T8"): one or two corners per iteration.
+3. `f1-sim-driver` executes the script: interpolates the inputs at the current `lapDistance` and adds a small, capped steering correction toward the scripted position (the *position hold*). The executor has no car model and no planning; all driving intelligence is in the script.
+4. The lap goes back into the historian with lap time and validity flags, and the loop repeats.
+
+Why distance and not time: open-loop replay against time drifts (one frame of USB jitter at the first braking point compounds into the gravel by turn 4). Distance indexing removes timing drift; the position hold absorbs the rest.
+
+Output adapters: virtual gamepad on Windows PC (ViGEm) for development; on the PS5 a passthrough adapter that keeps a licensed controller attached for authentication (the console rejects unlicensed USB devices). Offline time trial only.
+
+**Competition protocol ("AI race engineers")**: same track, car, tyres, fuel load, track temperature and assists, fixed through session settings. Each agent (Claude, ChatGPT, … through the same `LLMBackend` interface as `f1-history-agent`, so the comparison is fair) starts from the same reference lap and gets N iterations. A lap invalidated by track limits counts as a failure. Best valid lap wins. Every iteration's script, diff and telemetry is stored, so the progression chart and the corner-by-corner reasoning are publishable content (YouTube / Instagram).
+
 ### Motion rig (component, not a case)
 A motion simulator **reads the UDP directly**, not the historian — latency matters. The historian still participates in two ways:
 
@@ -93,6 +111,7 @@ Summary flow:
 ```
 PS5 → UDP → f1-sim-connector → box-box → lab, ML, agent, mobile
 PS5 → UDP → motion rig (real time)
+PS5 → UDP → f1-sim-driver (lap distance, position) → game inputs   ← lap script ← AI lap editor ← box-box
 FastF1 → box-box → derived G-forces → motion rig (replay)
 ```
 
@@ -104,9 +123,10 @@ FastF1 → box-box → derived G-forces → motion rig (replay)
 | 2 | `box-box` (Rust) | Telemetry foundation; the most differentiated case |
 | 3 | `f1-sim-connector` | Feeds the historian with live data; exercises streaming ingestion and swinging-door on real noise |
 | 4 | `f1-telemetry-lab` | Consumes the historian — proves the integration; game-vs-real overlay |
-| 5 | `f1-history-agent` | Consumes the DuckDB; closes the AI loop |
-| 6 | `f1-strategy-ml` | Phase 2 |
-| 7 | `f1-mobile` (Flutter) | Phase 2 — consumes the stabilised APIs of cases 2 and 5 |
+| 5 | `f1-history-agent` | Consumes the DuckDB; closes the AI loop; provides the `LLMBackend` the lap editor reuses |
+| 6 | `f1-sim-driver` | Scripted lap executor + AI lap editor; the "AI race engineers" competition |
+| 7 | `f1-strategy-ml` | Phase 2 |
+| 8 | `f1-mobile` (Flutter) | Phase 2 — consumes the stabilised APIs of cases 2 and 5 |
 
 ## Standards shared by every case
 
@@ -132,6 +152,7 @@ FastF1 → box-box → derived G-forces → motion rig (replay)
 6. **New case `f1-sim-connector`** (Python): edge connector for the F1 game's UDP telemetry — parser, tag mapping, edge exception compression, store-and-forward, quality flags. Inserted as step 3 of the execution order.
 7. **Motion rig** is a component fed directly by UDP (real time) and by the historian (replay with derived G-forces); not a case of its own.
 8. **Everything in English** — code, docs, comments, commits. FOUNDATIONS translated accordingly.
+9. **New case `f1-sim-driver`** (Python): the AI never drives in real time; it writes a lap script indexed by lap distance and the executor plays it with a minimal position hold. Hosts the "AI race engineers" competition protocol. Inserted as step 6 of the execution order.
 
 ## Tooling prerequisites
 

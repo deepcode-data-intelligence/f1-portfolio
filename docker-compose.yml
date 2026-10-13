@@ -2,6 +2,7 @@
 #
 #   docker compose up                       # platform services (box-box + history-agent + telemetry-lab + sim-connector)
 #   docker compose --profile etl run etl    # one-shot ETL (f1-data-platform)
+#   docker compose --profile driver up      # + sim-driver (needs a gamepad output device on the host)
 #
 # Shared volumes:
 #   f1-data   -> DuckDB / Parquet produced by f1-data-platform, read by f1-history-agent
@@ -50,6 +51,19 @@ services:
       SIM_UDP_PORT: "20777"
     ports:
       - "20777:20777/udp"
+    depends_on:
+      - box-box
+
+  sim-driver:
+    build: ./f1-sim-driver
+    profiles: ["driver"]
+    environment:
+      DRIVER_BOXBOX_URL: http://box-box:8081
+      DRIVER_UDP_PORT: "20778"
+    ports:
+      - "20778:20778/udp"
+    volumes:
+      - ./data/scripts:/app/data/scripts
     depends_on:
       - box-box
 
