@@ -56,4 +56,4 @@ SELECT code, wins, podiums, poles, points FROM driver_season_summary WHERE seaso
 
 ## Data & attribution
 
-Jolpica-F1 (CC BY 4.0). Unofficial project, not affiliated with Formula 1.
+Jolpica-F1 data: [CC BY-NC-SA 4.0](https://github.com/jolpica/jolpica-f1/blob/main/TERMS.md). Source-code licenses and data licenses are separate. Unofficial project, not affiliated with Formula 1.

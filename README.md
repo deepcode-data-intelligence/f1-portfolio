@@ -1,95 +1,82 @@
-# F1 Data Platform — an applied-engineering portfolio
+# F1 Data Platform — telemetry and AI experiments
 
-An end-to-end data & AI platform built around Formula 1 public data, designed as a set of
-integrated cases that demonstrate applied knowledge across **data engineering, industrial
-time-series systems, real-time edge connectors, applied AI/RAG, dashboards, machine learning and mobile**.
+A personal engineering lab by **Rodrigo Manso**, supported by [DeepCode](https://deepcode.com.br). Eight connected cases explore historical data, game telemetry, industrial historian patterns and controlled AI experiments.
 
-> 🏗️ **Status: scaffolded.** Architecture and scope are defined (see below) and every case has
-> its skeleton, CI and Docker image in this monorepo; implementation is happening case by case.
->
-> 📄 Full solution overview (architecture, infrastructure, BPM process diagrams, glossary):
-> **https://deepcode.com.br/f1/**
+**Status — 13 October 2026:** ETL implementation and isolated Python prototypes are in progress. The live telemetry pipeline, AI-controlled lap experiments and motion rig are not yet demonstrated. Status describes the local code reviewed on this date; consult each component for newer execution evidence.
 
-## Why F1?
+- [Design and scope](FOUNDATIONS.md)
+- [Validation gates and evidence protocol](docs/VALIDATION.md)
+- [Public overview — English](https://deepcode.com.br/en/f1/) · [Português](https://deepcode.com.br/f1/)
 
-Formula 1 generates rich public data (70+ years of history, modern telemetry) and its
-engineering culture mirrors industrial operations: telemetry historians, real-time dashboards,
-strategy models. This platform intentionally reuses patterns from regulated industrial
-environments — where its author works daily (AVEVA PI System, GxP) — and rebuilds them
-from scratch in the open.
+- [Role-aligned stack plan](docs/STACK-ALIGNMENT.md): Rust historian, planned C++ execution runtime, Python data/AI and a future React/TypeScript interface.
 
-## The platform
+## Target architecture
 
 ```mermaid
 flowchart LR
-    J[Jolpica-F1 API<br/>history 1950–today] --> DP[f1-data-platform<br/>Python ETL · DuckDB/Parquet]
-    FF[FastF1<br/>post-session telemetry] --> PIMS[box-box<br/>Rust historian · Parquet<br/>swinging-door compression]
-    PS5[F1 game on PS5<br/>UDP telemetry · 60 Hz] --> SIM[f1-sim-connector<br/>Python edge connector<br/>exception filter · store-and-forward]
-    SIM --> PIMS
-    PS5 -. real time .-> RIG[motion rig]
-    PS5 --> DRV[f1-sim-driver<br/>scripted lap executor<br/>distance-indexed · position hold]
-    PIMS --> ED[AI lap editor<br/>Claude · ChatGPT]
-    ED -- lap script --> DRV
-    DRV -- game inputs --> PS5
-    PIMS -. replay · derived G-forces .-> RIG
-    DP --> AG[f1-history-agent<br/>FastAPI · RAG + SQL tools<br/>+ /stats REST API]
-    PIMS --> TL[f1-telemetry-lab<br/>Streamlit dashboards]
-    DP --> ML[f1-strategy-ml<br/>tyre & pit-stop models]
-    AG --> MOB[f1-mobile<br/>Flutter · Android/iOS]
-    PIMS --> MOB
+ J[Jolpica historical data] --> E[Python ETL / DuckDB / Parquet]
+ E --> A[History agent: read-only SQL + RAG]
+ F[FastF1 post-session data] --> H[box-box: planned Rust historian]
+ G[Game UDP / recorded packets] --> C[Capture and fan-out]
+ C --> S[Edge connector]
+ S --> H
+ H --> D[Telemetry dashboard]
+ H --> L[Offline AI lap editor]
+ L --> V[Validate bounded edits]
+ V --> X[Deterministic controller]
+ C --> X
+ X --> G
+ A --> M[Later: mobile client]
+ H --> ML[Later: ML experiments]
 ```
 
-| # | Case | Focus | Stack | Status |
-|---|------|-------|-------|--------|
-| 1 | [`f1-data-platform`](f1-data-platform/) | Data engineering: layered ETL of full F1 history | Python, DuckDB, Parquet | 🚧 in progress |
-| 2 | [`box-box`](box-box/) | A minimal industrial historian (PIMS) for telemetry: tag/time-series model, swinging-door compression, query API | Rust, Arrow/Parquet, axum | 🧱 scaffold |
-| 3 | [`f1-telemetry-lab`](f1-telemetry-lab/) | PI-Vision-style comparative telemetry dashboards | Python, Streamlit, FastF1 | 🧱 scaffold |
-| 4 | [`f1-history-agent`](f1-history-agent/) | Headless AI agent: RAG over F1 history + SQL tool-calling for exact stats, with automated evals | Python, FastAPI, local embeddings | 🧱 scaffold |
-| 5 | [`f1-strategy-ml`](f1-strategy-ml/) | Tyre degradation & pit-window models | Python, scikit-learn | 📋 phase 2 |
-| 6 | [`f1-mobile`](f1-mobile/) | Mobile client for the platform APIs: natural-language Q&A, stats explorer, telemetry charts, live pit wall, offline-first | Flutter/Dart | 📋 phase 2 |
-| 7 | [`f1-sim-connector`](f1-sim-connector/) | Edge connector (PI Interface pattern) for the F1 game's live UDP telemetry: parser, tag mapping, edge exception compression, store-and-forward, quality flags | Python | 🧱 scaffold |
-| 8 | [`f1-sim-driver`](f1-sim-driver/) | Scripted lap executor: an AI analyses a lap, writes the next one as a distance-indexed script, the executor plays it. Hosts the "AI race engineers" competition (Claude vs ChatGPT, best valid lap wins) | Python | 🧱 scaffold |
+This diagram is a target design, not a depiction of a working integrated deployment. A controller receives telemetry independently of historian availability; the LLM proposes changes between laps. Motion-cue research is optional and outside the first release.
 
-## Run the platform
+## Implementation map
+
+| Component | Present code / scope | Still to demonstrate |
+|---|---|---|
+| [f1-data-platform](f1-data-platform/) | Historical ETL implementation; raw/staging/marts and quality modules | See the actively maintained component README for run evidence and remaining backfill |
+| [box-box](box-box/) | Rust service scaffold with health endpoint | Ingestion, storage, compression and query pipeline |
+| [f1-sim-connector](f1-sim-connector/) | Header parser, tags, exception filter, in-memory buffer | Packet bodies, live listener, durable delivery and historian client |
+| [f1-telemetry-lab](f1-telemetry-lab/) | Streamlit scaffold | Dashboard consuming the historian API |
+| [f1-history-agent](f1-history-agent/) | FastAPI health scaffold | SQL tools, RAG, API contracts and evaluations |
+| [f1-sim-driver](f1-sim-driver/) | Lap-script schema, interpolation, position-hold and edit prototypes | State capture, game-input adapters, stable closed loop and AI experiments |
+| [f1-strategy-ml](f1-strategy-ml/) | Scaffold / later phase | Models, chronological evaluation and domain-shift analysis |
+| [f1-mobile](f1-mobile/) | Scaffold / later phase | Client against stable platform APIs |
+
+## Run what exists
+
+From the repository root, Docker and Compose are required for container commands:
 
 ```bash
-docker compose up                      # box-box :8081 · history-agent :8080 · telemetry-lab :8501 · sim-connector udp/20777
-docker compose --profile etl run etl   # one-shot history ETL (writes the shared DuckDB volume)
+docker compose up box-box history-agent telemetry-lab
 ```
 
-Each case folder has its own README with local-development instructions (`uv` for Python, `cargo` for Rust).
+This starts the service scaffolds (health endpoints and dashboard shell), not a complete telemetry platform. Connector and driver container defaults currently display CLI help; they do not capture UDP or drive the game. Follow each component README for local commands and the ETL README for current pipeline execution. Compose port declarations alone do not implement packet fan-out.
 
-## Two classes of data
+## First deliverable
 
-Public F1 sources are **historical or post-session** (Jolpica, FastF1). The F1 game's UDP stream adds
-what an industrial historian exists to handle: **live telemetry at 60 Hz with a known car setup**.
-That enables the platform's showcase features — overlaying your own game lap on a real driver's lap
-aligned by distance, training tyre-degradation models in a controlled environment and testing them
-against real data (domain shift), replaying a real lap on a motion rig using G-forces derived
-from position and speed, and letting AI models compete as race engineers: analyse a lap, script the
-next one, execute it, repeat.
+One recorded session → versioned decoding → connector → historian → dashboard, with raw data preserved and replay reproducible. Then prove outage/restart recovery and quantify compression error. Validate the game-input adapter early, but only begin AI lap editing after a repeatable non-LLM baseline exists.
 
-## Design principles
+## Engineering principles
 
-- **Integration over isolation** — every case consumes or feeds another; the platform tells one architecture story.
-- **The AI engineers, it does not drive** — LLM latency rules out real-time control; the AI writes the next lap as a script and a dumb executor plays it.
-- **Exact numbers, never hallucinated** — the AI agent answers stats via SQL tool-calling; RAG is reserved for narrative.
-- **Industrial patterns in the open** — the PIMS case implements the historian concepts (tags, compression deviation, downsampling) that usually live behind enterprise licenses.
-- **Evaluation as a feature** — the agent ships with a golden Q&A eval set and automated scoring.
-- **Docker-first** — every runnable case ships a `Dockerfile` and `docker-compose.yml`; `docker compose up` is the only requirement to bring it up. Local toolchains (uv, cargo) are optional, for development only.
+- Evidence before claims: publish commands, environment, source provenance and failures with every result.
+- The LLM edits between laps; deterministic code handles the control loop.
+- Statistics come from validated, bounded read-only queries; tool use does not itself guarantee correct answers.
+- Separate prototype behavior from intended durability, throughput and control guarantees.
+- Use the same observations, tools and trial budgets when comparing model-assisted approaches.
+
+## Build journal
+
+Planned series: **Building a Telemetry Lab / Construindo um Laboratório de Telemetria**, by Rodrigo Manso with DeepCode support. Separate English and Portuguese videos follow the milestones: capture, replay, recovery, signal fidelity, baseline control and AI evaluation. Channel links will be added after setup; no publication schedule is a promise of feature completion.
+
+## Attribution and license
+
+Repository source code is MIT licensed. That does not relicense datasets or game assets. [Jolpica data terms](https://github.com/jolpica/jolpica-f1/blob/main/TERMS.md) specify CC BY-NC-SA 4.0. FastF1's MIT license covers its software, not blanket rights to underlying telemetry. Record provenance and permitted use for each dataset, document corpus and published clip; check applicable terms before redistribution or monetisation. Wikipedia content needs its applicable attribution and license retained.
+
+Game telemetry is intended to come from the author's own sessions. This unofficial project is not affiliated with Formula 1, its teams or EA.
 
 ## Author
 
-**Rodrigo Manso** — AI Solutions Architect, founder of [DeepCode Inteligência de Dados](https://deepcode.com.br).
-25 years building mission-critical systems for healthcare, government and the pharmaceutical
-industry (GxP-regulated environments, AVEVA PI System). [LinkedIn](https://www.linkedin.com/in/rodrigolmanso/)
-
-## Data sources & attribution
-
-[Jolpica-F1](https://github.com/jolpica/jolpica-f1) (Ergast successor) · [FastF1](https://github.com/theOehrly/Fast-F1) (MIT) · Wikipedia (CC BY-SA) ·
-game telemetry generated by the author's own sessions of EA's F1 game (track and car content belong to EA and Formula One Licensing B.V.).
-This is an unofficial project and is not associated in any way with Formula 1 companies or EA. F1 and related marks are trademarks of Formula One Licensing B.V.
-
-## License
-
-MIT
+Rodrigo Manso — Senior Software Engineer / Software Architect, 25 years across public administration, healthcare and life sciences. [LinkedIn](https://www.linkedin.com/in/rodrigolmanso/) · [DeepCode](https://deepcode.com.br)

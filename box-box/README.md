@@ -1,12 +1,14 @@
 # box-box
 
+> Status clarification — 13 October 2026: The table below is the target v1 scope; only the health scaffold is implemented. FastF1 software licensing does not grant blanket data redistribution rights. See [validation gates](../docs/VALIDATION.md).
+
 **Case 2 — Industrial historian in Rust.** A minimal **PIMS** (Process Information
 Management System) inspired by industrial historians (AVEVA PI), applied to F1 telemetry.
 "Box, box" is the radio call for a pit stop: the moment the car comes in and the data goes out.
 
 > Status: scaffold (`/health` only).
 
-## What it implements (v1)
+## Planned v1 scope
 
 | Concept | Implementation |
 |---|---|
@@ -26,4 +28,4 @@ cargo test && cargo clippy --all-targets -- -D warnings
 
 Environment: `BOXBOX_BIND` (default `0.0.0.0:8081`), `BOXBOX_DATA_DIR` (default `/data`).
 
-FastF1 (MIT). Unofficial project, not affiliated with Formula 1.
+FastF1 software is MIT licensed; underlying data terms are separate. Unofficial project, not affiliated with Formula 1.

@@ -1,5 +1,7 @@
 # f1-history-agent
 
+> Status clarification — 13 October 2026: Health scaffold only. RAG, SQL tools, statistics endpoints and evaluations remain planned. Model usage requires valid authentication and a checked usage/cost model. See [validation gates](../docs/VALIDATION.md).
+
 **Case 4 — Applied AI / platform gateway.** Headless FastAPI service:
 
 - `POST /ask` — hybrid agent: **tool-calling → SQL** on the `f1-data-platform` DuckDB for exact

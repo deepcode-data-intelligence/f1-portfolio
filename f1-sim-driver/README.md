@@ -1,49 +1,30 @@
 # f1-sim-driver
 
-**Case 8 — Scripted lap executor.** Plays an AI-authored **lap script** into the F1 game.
-The AI never drives in real time: it analyses a recorded lap, writes the next lap as a script
-(steering, throttle, brake, gear **indexed by lap distance**), and this component executes it.
-The result goes back into the `box-box` historian and the loop repeats. Best valid lap wins.
+Case 8: prototypes for distance-indexed lap scripts and controlled AI editing. The intended LLM loop runs **between laps**: inspect → propose a bounded edit → validate → execute deterministically → measure. No connected game-control loop is demonstrated.
 
-> Status: scaffold — lap-script format, distance-indexed executor with position hold, segment
-> edits, CLI and unit tests. UDP state reader and gamepad output adapters land next.
+## Present implementation
 
-## Why distance, not time
+LapScript/ControlPoint schemas, interpolation by distance, proportional capped position correction, segment edits, CLI and unit-test files. UDP state capture and game-input adapters are pending. Distance indexing helps alignment but does not guarantee control stability.
 
-Replaying inputs against time drifts: one frame of USB jitter at the first braking point
-compounds into the gravel by turn 4. Indexing by the game's `lapDistance` removes timing
-drift. A small, capped steering correction toward the scripted position (the *position
-hold*) absorbs the rest. The executor has no car model and no planning; all driving
-intelligence is in the script.
+Known limitations: lateral-offset edits update metadata that the executor does not consume; segment shifts move all affected control points and need validated collision/continuity semantics. These operations must not be described as demonstrated racing-line or braking-point optimisation.
 
-## Components
+## Local inspection
 
-| Module | Role |
-|---|---|
-| `script.py` | `LapScript` / `ControlPoint`: the exchange format between lap editor and executor |
-| `executor.py` | interpolation by distance + proportional, capped position hold |
-| `edits.py` | the lap editor's vocabulary: shift a segment, scale a channel, offset laterally |
-| `cli.py` | `f1-driver info`, `f1-driver validate <script.json>` |
-
-Output adapters (next iteration): a virtual gamepad on Windows PC (ViGEm) and, for the PS5, a
-passthrough adapter that keeps a licensed controller attached for authentication. They are
-platform-specific and will live behind an `InputSink` interface, outside the core dependencies.
-
-## Run
+From this component directory:
 
 ```bash
-docker compose --profile driver up sim-driver
-uv sync && uv run f1-driver info
+uv sync
+uv run f1-driver info
+uv run f1-driver validate path/to/script.json
 uv run pytest
 ```
 
-Environment: `DRIVER_UDP_PORT` (default `20778`), `DRIVER_BOXBOX_URL`,
-`DRIVER_POSITION_HOLD_GAIN`, `DRIVER_POSITION_HOLD_MAX`.
+Replace the script path with an existing fixture. The Docker default shows CLI help; the driver does not receive live UDP or generate gamepad output. Port 20778 does not receive a copy of port 20777 without an implemented fan-out.
 
-## Competition protocol (summary)
+## Baseline before AI
 
-Same track, car, tyres, fuel and assists. Time trial, offline. Each agent starts from the same
-reference lap and gets N iterations; a lap invalidated by track limits counts as a failure.
-Full protocol in the repository `FOUNDATIONS.md`.
+Validate supported input hardware/software early. ViGEm is end-of-life; a maintained alternative or explicitly bounded experiment must be chosen. PS5 adapter compatibility is unverified. Establish repeatable non-LLM laps, lap-reset/state handling, command limits and stale/disconnected telemetry behavior before model comparisons.
 
-Unofficial project, not affiliated with Formula 1 or EA.
+Hold environment/settings and available observations constant, repeat trials, randomise execution order and retain invalid laps. Compare to unchanged replay and a simple non-LLM edit/search baseline. Report valid-lap rate, median/spread, best lap, failures and inference budget; do not rank models from one best lap.
+
+All proposed control experiments are offline simulator sessions. See [foundations](../FOUNDATIONS.md) and [validation protocol](../docs/VALIDATION.md). Unofficial; not affiliated with Formula 1 or EA.
